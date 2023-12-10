@@ -46,6 +46,10 @@ glEnd();*/
 
 _triangulos3D::_triangulos3D()
 {
+  ambiente = _vertex4f(1.0,0.8,0.0,1.0);
+   difuso = _vertex4f(1.0,0.8,0.0,1.0);
+    especular = _vertex4f(0.5,0.5,0.5,1.0);
+  brillo = 10;
 }
 
 
@@ -114,6 +118,92 @@ for (i=0;i<caras.size();i++){
 glEnd();
 }
 
+//*************************************************************************
+// dibujar en modo sólido con colores diferentes para cada vertice
+//*************************************************************************
+
+void   _triangulos3D::draw_solido_colores_vertices(){
+    int i;
+    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+    glShadeModel(GL_SMOOTH);
+    glBegin(GL_TRIANGLES);
+    for (i=0;i<caras.size();i++){
+      glColor3f(colores_vertices[caras[i]._0].r,
+                colores_vertices[caras[i]._0].g,
+                colores_vertices[caras[i]._0].b);
+      glVertex3fv((GLfloat *) &vertices[caras[i]._0]);
+
+      glColor3f(colores_vertices[caras[i]._1].r,
+                colores_vertices[caras[i]._1].g,
+                colores_vertices[caras[i]._1].b);
+        glVertex3fv((GLfloat *) &vertices[caras[i]._1]);
+
+      glColor3f(colores_vertices[caras[i]._2].r,
+                colores_vertices[caras[i]._2].g,
+                colores_vertices[caras[i]._2].b);
+      glVertex3fv((GLfloat *) &vertices[caras[i]._2]);
+
+      }
+    glEnd();
+}
+
+//*************************************************************************
+// dibujar en modo sólido con brillo plano para las caras
+//*************************************************************************
+
+void   _triangulos3D::draw_solido_brillo_plano(){
+  glEnable(GL_LIGHTING);
+  glShadeModel(GL_FLAT);
+  glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, (GLfloat *) &ambiente);
+  glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, (GLfloat *) &difuso);
+  glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, (GLfloat *) &especular);
+  glMaterialfv(GL_FRONT_AND_BACK,GL_SHININESS, &brillo);
+  glEnable(GL_NORMALIZE);
+
+  glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+  glBegin(GL_TRIANGLES);
+  for (int i=0;i<caras.size();i++){
+    glNormal3f(normales_caras[i].x, normales_caras[i].y, normales_caras[i].z);
+    glVertex3fv((GLfloat *) &vertices[caras[i]._0]);
+    glVertex3fv((GLfloat *) &vertices[caras[i]._1]);
+    glVertex3fv((GLfloat *) &vertices[caras[i]._2]);
+    }
+  glEnd();
+  glDisable(GL_LIGHTING);
+}
+
+//*************************************************************************
+// dibujar en modo sólido con brillo plano para las caras
+//*************************************************************************
+
+void   _triangulos3D::draw_solido_brillo_suave(){
+  glEnable(GL_LIGHTING);
+  glShadeModel(GL_SMOOTH);
+  glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, (GLfloat *) &ambiente);
+  glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, (GLfloat *) &difuso);
+  glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, (GLfloat *) &especular);
+  glMaterialfv(GL_FRONT_AND_BACK,GL_SHININESS,&brillo);
+  glEnable(GL_NORMALIZE);
+
+  glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+  glBegin(GL_TRIANGLES);
+  for (int i=0;i<caras.size();i++){
+      glNormal3f(normales_vertices[caras[i]._0].x,
+      normales_vertices[caras[i]._0].y, normales_vertices[caras[i]._0].z);
+      glVertex3fv((GLfloat *) &vertices[caras[i]._0]);
+
+      glNormal3f(normales_vertices[caras[i]._1].x,
+      normales_vertices[caras[i]._1].y, normales_vertices[caras[i]._1].z);
+      glVertex3fv((GLfloat *) &vertices[caras[i]._1]);
+
+     glNormal3f(normales_vertices[caras[i]._2].x,
+     normales_vertices[caras[i]._2].y, normales_vertices[caras[i]._2].z);
+      glVertex3fv((GLfloat *) &vertices[caras[i]._2]);
+    }
+  glEnd();
+  glDisable(GL_LIGHTING);
+}
+
 
 //*************************************************************************
 // dibujar con distintos modos
@@ -125,7 +215,10 @@ switch (modo){
 	case POINTS:draw_puntos(r, g, b, grosor);break;
 	case EDGES:draw_aristas(r, g, b, grosor);break;
 	case SOLID:draw_solido(r, g, b);break;
-	case SOLID_COLORS:draw_solido_colores();break;
+	case SOLID_COLORS:draw_solido_colores();break; 
+  case SOLID_COLORS_GOURAUD:draw_solido_colores_vertices(); break;
+  case SOLID_PHONG_FLAT:draw_solido_brillo_plano();break;
+  case SOLID_PHONG_GOURAUD:draw_solido_brillo_suave();break;
 	}
 }
 
@@ -155,6 +248,7 @@ for (i=0;i<n_c;i++)
    normales_caras[i].y/=modulo;   
    normales_caras[i].z/=modulo;     
   }
+  calcular_nc = 1;
 }
 
 //*************************************************************************
@@ -168,6 +262,11 @@ n_v=vertices.size();
 normales_vertices.resize(n_v);
 
 n_c=caras.size();
+
+
+if(calcular_nc == 0){
+  calcular_normales_caras();
+}
 
 for (i=0;i<n_v;i++)
  normales_vertices[i]=_vertex3f(0.0,0.0,0.0);
@@ -187,6 +286,7 @@ for (i=0;i<n_v;i++)
        normales_vertices[i].y/=modulo;
        normales_vertices[i].z/=modulo;            
       }
+  calcular_nv = 1;
 }
 
 
@@ -264,6 +364,38 @@ void _triangulos3D::colors_diffuse_flat (float kr, float kg, float kb,
     }
 }
 
+void    _triangulos3D::colors_diffuse_gouraud  (float kr, float kg, float kb, float lpx, float lpy, float lpz){
+  // aplicar formula de reflexion difusa pero para los vertices
+    int i, n_v;
+    float modulo, escalar;
+    _vertex3f l;
+
+    n_v=vertices.size();
+    colores_vertices.resize(n_v);
+    for (i=0;i<n_v;i++)
+    {
+      // calculo del vector que va hacia la luz
+      l.x=lpx-vertices[i].x;
+      l.y=lpy-vertices[i].y;
+      l.z=lpz-vertices[i].z;
+      // se normaliza el vector l
+      modulo=sqrt(l.x*l.x+l.y*l.y+l.z*l.z);
+      l.x/=modulo;
+      l.y/=modulo;
+      l.z/=modulo;
+
+      escalar=l.x*normales_vertices[i].x+l.y*normales_vertices[i].y+l.z*normales_vertices[i].z;
+      if (escalar>0.0)
+        {colores_vertices[i].r=kr*escalar;
+          colores_vertices[i].g=kg*escalar;
+          colores_vertices[i].b=kb*escalar;
+        }
+      else {colores_vertices[i].r=0.0;  // si da 0 o menos, la cara no está de cara a la luz
+            colores_vertices[i].g=0.0;
+            colores_vertices[i].b=0.0;
+            }
+    }
+}
 //*************************************************************************
 // objetos o modelos
 //*************************************************************************
@@ -302,10 +434,11 @@ caras[11]._0=1;caras[11]._1=5;caras[11]._2=4;
 
 // normales
 calcular_normales_caras();
+calcular_normales_vertices();
 
 //colores de las caras
 colors_random();
-
+colors_diffuse_gouraud(0.3,0.7,0.9, 20,20,20);
 }
 
 
@@ -334,10 +467,11 @@ caras[5]._0=3;caras[5]._1=2;caras[5]._2=1;
 
 // normales
 calcular_normales_caras();
+calcular_normales_vertices();
 
 //colores de las caras
 colors_random();
-
+colors_diffuse_gouraud(0.3,0.7,0.9, 20,20,20);
 }
 
 //*************************************************************************
@@ -386,10 +520,13 @@ for (i=0;i<n_car;i++)
 
 // normales
 calcular_normales_caras();
+calcular_normales_vertices();
 
 // colores
 //colors_random();
+
 colors_diffuse_flat(0.5,0.4,0.9,   20,20,20); // posición intrínseca del objeto - posición de la luz
+colors_diffuse_gouraud(0.5,0.4,0.9,  20, 20,20);
 // 0, 20 ,0 -> luz que está encima
 
 }
@@ -498,10 +635,28 @@ if (tapa_su==1)
 // normales
 calcular_normales_caras();
 
+if(tipo == 1){ // calcular normales para la esfera
+  float norma;
+  int num_vertices;
+  
+  num_vertices = vertices.size();
+  normales_vertices.resize(num_vertices);
+  
+  for(int i = 0; i < vertices.size(); i++){
+    norma = sqrt(vertices[i].x*vertices[i].x + vertices[i].y*vertices[i].y + vertices[i].z*vertices[i].z);
+    normales_vertices[i].x = vertices[i].x/norma;
+    normales_vertices[i].y = vertices[i].y/norma;
+    normales_vertices[i].z = vertices[i].z/norma;
+  } 
+}
+else
+  calcular_normales_vertices();
+
+
 //colores de las caras
 // colors_random();
 colors_diffuse_flat(0.5,0.9,0.3,   20,20,20);
-
+colors_diffuse_gouraud(0.3,0.7,0.9, 20,20,20);
 }
 
 
@@ -545,10 +700,13 @@ for (i=0;i<num_aux;i++)
    }  
    
 // normales
-calcular_normales_caras();   
+calcular_normales_caras(); 
+calcular_normales_vertices();  
    
 //colores de las caras
 colors_random();
+colors_diffuse_gouraud(0.3,0.7,0.9, 20,20,20);
+
 }
 
 //************************************************************************
@@ -931,4 +1089,393 @@ pala.draw(modo, r, g, b, grosor);
 
 glPopMatrix();
 };
+
+//************************************************************************
+// práctica 3, objeto jerárquico articulado: Lavadora
+//************************************************************************
+
+//************************************************************************
+// piezas
+//************************************************************************
+
+
+//************************************************************************
+// rueda
+//************************************************************************
+_rueda::_rueda()
+{
+  ancho_cilindro=0.1;
+  alto_cilindro=0.1;
+  fondo_cilindro=0.1;
+
+  ancho_palo = 0.03;
+  alto_palo = 0.1;
+  fondo_palo = 0.03;
+
+  ancho_base = 0.1;
+  alto_base = 0.01;
+  fondo_base = 0.1;
+
+
+  cilindro.ambiente = _vertex4f(0.19225,0.19225,0.19225,1);
+  cilindro.difuso = _vertex4f(0.50754,0.50754,0.50754,1);
+  cilindro.especular = _vertex4f(0.508273,0.508273,0.508273,1);
+  cilindro.brillo = 0.7;
+
+  // bronze
+  palo.ambiente = _vertex4f(0.2,0.12,0.05,1);
+  palo.difuso = _vertex4f(0.70754,0.42754,0.20754,1);
+  palo.especular = _vertex4f(0.408273,0.278273,0.168273,1);
+  palo.brillo = 0.3;
+
+  base.ambiente = _vertex4f(0.19225,0.19225,0.19225,1);
+  base.difuso = _vertex4f(0.50754,0.50754,0.50754,1);
+  base.especular = _vertex4f(0.508273,0.508273,0.508273,1);
+  base.brillo = 0.7;
+
+  colors_diffuse_gouraud(0.0,0.0,0.0,20,20,20);
+};
+
+void _rueda::draw(_modo modo, float r, float g, float b, float grosor)
+{
+  glPushMatrix();
+  glScalef(ancho_cilindro, alto_cilindro, fondo_cilindro);
+  glRotatef(90,1,0,0);
+  cilindro.draw(modo, 0.2, 0.2, 0.2, grosor);
+  glPopMatrix();
+
+  glPushMatrix();
+  glTranslatef(0,0.15,0);
+  glScalef(ancho_palo, alto_palo, fondo_palo);
+  palo.draw(modo, 0, 0, 0, grosor);
+  glPopMatrix();
+
+  glPushMatrix();
+  glTranslatef(0,0.2,0);
+  glScalef(ancho_base, alto_base, fondo_base);
+  base.draw(modo, 0, 0, 0, grosor);
+  glPopMatrix();
+};
+
+//************************************************************************
+// puerta
+//************************************************************************
+_puerta::_puerta()
+{
+  ancho_cilindro=1.6;
+  alto_cilindro=0.05;
+  fondo_cilindro=1.6;
+
+  ancho_cilindro2=1.3;
+  alto_cilindro2=0.05;
+  fondo_cilindro2=1.3;
+
+  ancho_cubo=0.15;
+  alto_cubo=0.5;
+  fondo_cubo=0.15;
+
+  cilindro.ambiente = _vertex4f(0.8,0.8,0.8,1);
+  cilindro.difuso = _vertex4f(0.50754,0.50754,0.50754,1);
+  cilindro.especular = _vertex4f(0.708273,0.708273,0.708273,1);
+  cilindro.brillo = 0.7;
+
+  cilindro2.ambiente = _vertex4f(0.1,0.1,0.1,1);
+  cilindro2.difuso = _vertex4f(0.5,0.5,0.5,1);
+  cilindro2.especular = _vertex4f(0.708273,0.708273,0.708273,1);
+  cilindro2.brillo = 0.7;
+
+  cubo.ambiente = _vertex4f(0.25,0.2,0.09,1);
+  cubo.difuso = _vertex4f(0.75754,0.60754,0.22754,1);
+  cubo.especular = _vertex4f(0.668273,0.558273,0.368273,1);
+  cubo.brillo = 0.7;
+
+  colors_diffuse_gouraud(0.0,0.0,0.0,20,20,20);
+};
+
+void _puerta::draw(_modo modo, float r, float g, float b, float grosor)
+{
+
+  glPushMatrix();
+  glTranslatef(2.5,0,0.2);
+  glScalef(ancho_cubo, alto_cubo, fondo_cubo);
+  cubo.draw(modo,0,0,0, grosor);
+  glPopMatrix();
+
+  glPushMatrix();
+  glRotatef(90,1,0,0);
+  glTranslatef(1.5,0.1,0);
+  glScalef(ancho_cilindro2, alto_cilindro2, fondo_cilindro2);
+  cilindro2.draw(modo, 1, 1, 1, grosor);
+  glPopMatrix();
+
+  glPushMatrix();
+  glRotatef(90,1,0,0);
+  glTranslatef(1.5,0,0);
+  glScalef(ancho_cilindro, alto_cilindro, fondo_cilindro);
+  cilindro.draw(modo, 0.7, 0.7, 0.7, grosor);
+  glPopMatrix();
+
+  
+};
+
+//************************************************************************
+// tambor
+//************************************************************************
+_tambor::_tambor()
+{
+  ancho=1.5;
+  alto=0.05;
+  fondo=1.5;
+
+  cilindro.ambiente = _vertex4f(0.0,2,0.9,1);
+  cilindro.difuso = _vertex4f(0.2,0.4,0.5,1);
+  cilindro.especular = _vertex4f(0.0,0.2,0.8,1);
+  cilindro.brillo = 0.7;
+
+  colors_diffuse_gouraud(0.0,0.0,0.0,20,20,20);
+};
+
+void _tambor::draw(_modo modo, float r, float g, float b, float grosor)
+{
+  glPushMatrix();
+  glRotatef(90,1,0,0);
+  glScalef(ancho, alto, fondo);
+  cilindro.draw(modo, 0, 0, 0, grosor);
+  glPopMatrix();
+};
+
+//************************************************************************
+// cajon
+//************************************************************************
+_cajon::_cajon()
+{
+  ancho=1.3;
+  alto=0.2;
+  fondo=2;
+
+  // pearl
+  cubo.ambiente = _vertex4f(0.8,0.8,0.8,1);
+  cubo.difuso = _vertex4f(1,0.829,0.829,1);
+  cubo.especular = _vertex4f(0.296648,0.296648,0.296648,1);
+  cubo.brillo = 0.5;
+
+  colors_diffuse_gouraud(0.0,0.0,0.0,20,20,20);
+};
+
+void _cajon::draw(_modo modo, float r, float g, float b, float grosor)
+{
+  glPushMatrix();
+  glScalef(ancho, alto, fondo);
+  cubo.draw(modo, 0.15, 0.15, 0.15, grosor);
+  glPopMatrix();
+
+};
+
+//************************************************************************
+// boton_apagado
+//************************************************************************
+_boton_apagado::_boton_apagado()
+{
+  ancho=3;
+  alto=1;
+  fondo=3;
+
+  // red rubber
+  cilindro.ambiente = _vertex4f(0.05,0.0,0.0,1);
+  cilindro.difuso = _vertex4f(0.5,0.4,0.4,1);
+  cilindro.especular = _vertex4f(0.7,0.04,0.04,1);
+  cilindro.brillo = 0.78125;
+
+  colors_diffuse_gouraud(0.0,0.0,0.0,20,20,20);
+};
+
+void _boton_apagado::draw(_modo modo, float r, float g, float b, float grosor)
+{
+  glPushMatrix();
+  glScalef(ancho, alto, fondo);
+  cilindro.draw(modo, r, g, b, grosor);
+  glPopMatrix();
+
+};
+
+
+//************************************************************************
+// ruleta
+//************************************************************************
+_ruleta::_ruleta()
+{
+  ancho_cilindro=1.5;
+  alto_cilindro=0.05;
+  fondo_cilindro=1.5;
+
+  ancho_cubo = 0.5;
+  alto_cubo = 5;
+  fondo_cubo = 1.5;
+  
+  cilindro.ambiente = _vertex4f(0,0,0,1);
+  cilindro.difuso = _vertex4f(0.01,0.01,0.01,1);
+  cilindro.especular = _vertex4f(0.5,0.5,0.5,1);
+  cilindro.brillo = 0.25;
+
+  cubo.ambiente = _vertex4f(0.0,0.0,0.0,1);
+  cubo.difuso = _vertex4f(0.5,0.0,0.0,1);
+  cubo.especular = _vertex4f(0.7,0.6,0.6,1);
+  cubo.brillo = 0.25;
+
+  colors_diffuse_gouraud(0.0,0.0,0.0,20,20,20);
+};
+
+void _ruleta::draw(_modo modo, float r, float g, float b, float grosor)
+{
+  glPushMatrix();
+  glRotatef(90,1,0,0);
+  glScalef(ancho_cilindro, alto_cilindro, fondo_cilindro);
+  cilindro.draw(modo, 0, 0, 0, grosor);
+
+  glTranslatef(0,fondo_cilindro,0);
+  glScalef(ancho_cubo, alto_cubo, fondo_cubo);
+  cubo.draw(modo, 1, 1, 1, grosor);
+  glPopMatrix();
+};
+
+//************************************************************************
+// cuerpo
+//************************************************************************
+_cuerpo::_cuerpo()
+{
+  ancho=4;
+  alto=6;
+  fondo=4;
+  base.ambiente = _vertex4f(0.19225,0.19225,0.19225,1);
+  base.difuso = _vertex4f(0.50754,0.50754,0.50754,1);
+  base.especular = _vertex4f(0.508273,0.508273,0.508273,1);
+  base.brillo = 0.7;
+
+  cubo_pequeño.ambiente = _vertex4f(0.19225,0.19225,0.19225,1);
+  cubo_pequeño.difuso = _vertex4f(0.50754,0.50754,0.50754,1);
+  cubo_pequeño.especular = _vertex4f(0.508273,0.508273,0.508273,1);
+  cubo_pequeño.brillo = 0.7;
+
+  colors_diffuse_gouraud(0.0,0.0,0.0,20,20,20);
+};
+
+void _cuerpo::draw(_modo modo, float r, float g, float b, float grosor)
+{
+  //cubo grande
+  glPushMatrix();
+  glScalef(ancho, alto, fondo);
+  base.draw(modo, 0.5, 0.5, 0.5, grosor);
+  //cubo pequeño
+  glScalef(1.0,0.1,0.86);
+  glTranslatef(0,5.5,-0.08);
+  cubo_pequeño.draw(modo, 0.7, 0.7, 0.7, grosor);
+  glPopMatrix();
+};
+
+_lavadora::_lavadora()
+{
+  // posicones
+  posicion_cajon = 0.0;
+  posicion_lavadora_z=0.0;
+  cajon_max = 1.9;
+  cajon_min = 0.0;
+  // giros
+  giro_puerta = 0.0;
+  giro_puerta_max = 90.0;
+  giro_puerta_min = 0.0;
+  giro_tambor = 0.0;
+  giro_ruleta1_max = 180.0;
+  giro_ruleta1_min = 0.0;
+  giro_ruleta2_max = 180.0;
+  giro_ruleta2_min = 0.0;
+  // color boton apagado
+  color_r_boton = 0.5;
+  fin_lavado = 450;
+};
+
+void _lavadora::draw(_modo modo, float r, float g, float b, float grosor)
+{
+  // // LAVADORA
+
+   glPushMatrix();
+  
+   glTranslatef(0,0,posicion_lavadora_z);
+    //cuerpo
+    glPushMatrix();
+    cuerpo.draw(modo, r, g, g, grosor);
+    glPopMatrix();
+    // cajon
+    glPushMatrix();
+    glTranslatef(0,0,posicion_cajon);
+    glTranslatef(-1.2,3.25,0.5);
+    cajon.draw(modo,r,g,b,grosor);
+    glPopMatrix();
+    // puerta
+    glPushMatrix();
+    glTranslatef(-1.5,0,2.075);
+    glRotatef(-giro_puerta,0,1,0);
+    puerta.draw(modo,r,g,b,grosor);
+    glPopMatrix();
+    // // tambor
+    glPushMatrix();
+    glTranslatef(0,0,1.975);
+    glRotatef(-giro_tambor,0,0,1);
+    tambor.draw(modo,r,g,b,grosor);
+    // comprobaciones para encender la luz
+    if(giro_tambor > 1)
+      color_r_boton = 1;
+    if(giro_tambor > fin_lavado)
+      color_r_boton = 0.5;
+    glPopMatrix();
+
+    // // ruletas
+    glPushMatrix();
+    glTranslatef(1,3.3,1.475);
+    glRotatef(giro_ruleta1, 0,0,1);
+    glScalef(0.15,0.15,0.15);
+    ruleta.draw(modo, r, g, b, grosor);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(1.5,3.3,1.475);
+    glRotatef(giro_ruleta2,0,0,1);
+    glScalef(0.15,0.15,0.15);
+    ruleta.draw(modo,r,g,b, grosor);
+    glPopMatrix();
+
+    // // boton apagado
+    glPushMatrix();
+    glTranslatef(0,3.3,1.475);
+    glRotatef(270,1,0,0);
+    glScalef(0.05,0.05,0.05);
+    boton_apagado.draw(modo, color_r_boton, 0, 0, grosor);
+    glPopMatrix();
+    // // ruedas
+    glPushMatrix();
+    glTranslatef(-1.7, -3.2, -1.7);
+    glRotatef(giro_ruedas,0,1,0);
+    rueda.draw(modo, r, g, b, grosor);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(-1.7, -3.2, 1.7);
+    glRotatef(giro_ruedas,0,1,0);
+    rueda.draw(modo, r, g, b, grosor);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(1.7,-3.2, -1.7);
+    glRotatef(giro_ruedas,0,1,0);
+    rueda.draw(modo, r, g, b, grosor);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(1.7,-3.2,1.7);
+    glRotatef(giro_ruedas,0,1,0);
+    rueda.draw(modo, r, g, b, grosor);
+    glPopMatrix();
+
+  glPopMatrix();
+}
+
 

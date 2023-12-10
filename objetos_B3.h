@@ -9,7 +9,8 @@
 
 
 const float AXIS_SIZE=5000;
-typedef enum{POINTS,EDGES,SOLID,SOLID_COLORS} _modo;
+typedef enum{POINTS,EDGES,SOLID,SOLID_COLORS, SOLID_COLORS_GOURAUD
+              ,SOLID_PHONG_FLAT, SOLID_PHONG_GOURAUD} _modo;
 
 //*************************************************************************
 // clase punto
@@ -24,7 +25,6 @@ public:
 void 	draw_puntos(float r, float g, float b, int grosor);
 
 vector<_vertex3f> vertices;
-vector<_vertex3f> colores_vertices;
 };
 
 //*************************************************************************
@@ -38,16 +38,19 @@ public:
 	_triangulos3D();
 void 	draw_aristas(float r, float g, float b, int grosor);
 void    draw_solido(float r, float g, float b);
+void   draw_solido_brillo_plano();
+void   draw_solido_brillo_suave();
 void 	draw_solido_colores();
+void   draw_solido_colores_vertices();
 void 	draw(_modo modo, float r, float g, float b, float grosor);
 
 /* asignación de colores */
 void 	colors_random();
 void 	colors_chess(float r1, float g1, float b1, float r2, float g2, float b2);
-void    colors_diffuse_flat (float kr, float kg, float kb,
+void   colors_diffuse_flat (float kr, float kg, float kb,
                              float lpx, float lpy, float lpz);
                              
-void    colors_diffuse_gouraud  (float kr, float kg, float kb,
+void   colors_diffuse_gouraud  (float kr, float kg, float kb,
                                  float lpx, float lpy, float lpz);                            
 /* calcular normales */
 
@@ -59,6 +62,15 @@ vector<_vertex3f> colores_caras;
 vector<_vertex3f> colores_vertices;
 vector<_vertex3f> normales_caras;
 vector<_vertex3f> normales_vertices;
+
+int calcular_nc, calcular_nv;
+
+// material
+_vertex4f ambiente;
+_vertex4f difuso;
+_vertex4f especular;
+float brillo; 
+
 };
 
 //*************************************************************************
@@ -300,4 +312,191 @@ _pala pala;
 _brazo brazo;
 _cabina cabina;
 _sustentacion sustentacion;
+};
+
+//************************************************************************
+// práctica 3, LAVADORA
+//************************************************************************
+
+//************************************************************************
+// piezas
+//************************************************************************
+
+//************************************************************************
+// clase ruleta
+//************************************************************************
+
+class _ruleta : public _triangulos3D{
+       public: _ruleta();
+       void  draw(_modo modo, float r, float g, float b, float grosor);
+
+       float ancho_cilindro;
+       float alto_cilindro;
+       float fondo_cilindro;
+
+       float ancho_cubo;
+       float alto_cubo;
+       float fondo_cubo;
+
+       protected:
+       _cilindro cilindro;
+       _cubo cubo;
+};
+
+//************************************************************************
+// clase boton_apagado
+//************************************************************************
+
+class _boton_apagado : public _triangulos3D{
+       public: _boton_apagado();
+       void  draw(_modo modo, float r, float g, float b, float grosor);
+
+       float ancho;
+       float alto;
+       float fondo;
+
+       protected:
+       _cilindro cilindro;
+};
+
+//************************************************************************
+// clase cuerpo 
+//************************************************************************
+class _cuerpo : public _triangulos3D{
+       public: _cuerpo();
+       void  draw(_modo modo, float r, float g, float b, float grosor);
+
+       float ancho;
+       float alto;
+       float fondo;
+
+       protected:
+       _cubo base;
+       _cubo cubo_pequeño;
+       
+};
+//************************************************************************
+// clase cajon 
+//************************************************************************
+class _cajon : public _triangulos3D{
+       public: _cajon();
+       void  draw(_modo modo, float r, float g, float b, float grosor);
+
+       float ancho;
+       float alto;
+       float fondo;
+
+       protected:
+       _cubo cubo; 
+};
+
+//************************************************************************
+// clase puerta 
+//************************************************************************
+class _puerta : public _triangulos3D{
+       public: _puerta();
+       void  draw(_modo modo, float r, float g, float b, float grosor);
+
+       float ancho_cilindro;
+       float alto_cilindro;
+       float fondo_cilindro;
+
+       float ancho_cilindro2;
+       float alto_cilindro2;
+       float fondo_cilindro2;
+
+       float ancho_cubo;
+       float alto_cubo;
+       float fondo_cubo;
+
+       protected:
+       _cilindro cilindro;
+       _cilindro cilindro2;
+       _cubo cubo;
+};
+
+//************************************************************************
+// clase rueda 
+//************************************************************************
+
+class _rueda : public _triangulos3D{
+       public: _rueda();
+       void  draw(_modo modo, float r, float g, float b, float grosor);
+
+       float ancho_cilindro;
+       float alto_cilindro;
+       float fondo_cilindro;
+       
+       float ancho_base;
+       float alto_base;
+       float fondo_base;
+
+       float ancho_palo;
+       float alto_palo;
+       float fondo_palo;
+
+       protected:
+       _cilindro cilindro;
+       _cubo palo;
+       _cubo base;
+};
+
+
+
+//************************************************************************
+// clase tambor 
+//************************************************************************
+
+class _tambor : public _triangulos3D{
+       public: _tambor();
+       void  draw(_modo modo, float r, float g, float b, float grosor);
+
+       float ancho;
+       float alto;
+       float fondo;
+
+       protected:
+       _cilindro cilindro;
+};
+
+//************************************************************************
+// lavadora (montaje del objeto final)
+//************************************************************************
+class _lavadora : public _triangulos3D{
+       public: _lavadora();
+       void  draw(_modo modo, float r, float g, float b, float grosor);
+       // cajon y puerta
+       float posicion_cajon;
+       float cajon_max;
+       float cajon_min;
+       float giro_puerta;
+       float giro_puerta_max;
+       float giro_puerta_min;
+       // tambor
+       float giro_tambor;
+       // ruletas
+       float giro_ruleta1;
+       float giro_ruleta1_max;
+       float giro_ruleta1_min;
+
+       float giro_ruleta2;
+       float giro_ruleta2_max;
+       float giro_ruleta2_min;
+
+       float color_r_boton;
+       // movimientos lavadora completa
+       float posicion_lavadora_z;
+       float giro_ruedas;
+
+       // fin del lavado
+       float fin_lavado;
+       
+       protected:
+       _puerta puerta;
+       _cajon cajon;
+       _cuerpo cuerpo;
+       _tambor tambor;
+       _ruleta ruleta;
+       _boton_apagado boton_apagado;
+       _rueda rueda;
 };
