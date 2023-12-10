@@ -178,9 +178,6 @@ void luces(){
     glDisable(GL_LIGHT0);
     glEnable(GL_LIGHT1);
     
-
-
-    
 }
 
 //**************************************************************************
@@ -245,7 +242,6 @@ switch (toupper(Tecla1)){
         case 'L':t_objeto=CILINDRO;break;
         case 'N':t_objeto=CONO;break;
         case 'E':t_objeto=ESFERA;break;
-        //case 'A':t_objeto=EXCAVADORA;break;
         case 'X':t_objeto=EXTRUSION;break;
         case 'K':t_objeto=MONTANA;break;
         case 'A':t_objeto=LAVADORA;break;
